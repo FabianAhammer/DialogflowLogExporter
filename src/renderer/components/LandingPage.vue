@@ -109,6 +109,7 @@ export default {
   data() {
     return {
       filterText: "",
+      bearerToken: "",
       logs: {
         conversations: [
           {
@@ -182,11 +183,18 @@ export default {
 
         if (dialogflowWindow.closed) {
           console.log(dialogflowCookies);
-          this.requestLogs(dialogflowCookies);
+          this.bearerToken = this.extractBearerToken(dialogflowCookies);
+          this.requestLogs(dialogflowCookies, this.bearerToken);
           window.removeEventListener("message", windowMessageCallback, false);
           clearInterval(closedPoller);
         }
       }, 500);
+    },
+    /**
+     * @param {String} cookies
+     */
+    extractBearerToken(cookies) {
+      return document.cookie.match(/currentAgentId[^=;]+=%22([^;]+)%22/)[1];
     },
     exportJson() {
       writeFile("leonie_logs.json", JSON.stringify(this.logs), "utf8", () => {
@@ -205,14 +213,14 @@ export default {
         `<span class="highlight">${this.filterText}</span>`
       );
     },
-    async requestLogs(cookies) {
+    async requestLogs(cookies, bearerToken) {
       let response = await fetch(
         `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false`,
         {
           method: "get",
           headers: new Headers({
             Cookie: cookies,
-            Authorization: "Bearer dde8b027-77dc-46a3-ad4d-d3d10e27ba74"
+            Authorization: `Bearer ${bearerToken}`
           }),
           credentials: "include"
         }
@@ -346,8 +354,8 @@ button {
   font-size: 1.1em;
 }
 .leonie-text-container {
-  /*height: 3em;
-  overflow-y: auto;*/
+  max-height: 7em;
+  overflow-y: auto;
 }
 .timestamp {
   font-size: 0.8em;
