@@ -22,8 +22,8 @@
   "dependencies": {
     "acorn": "^6.0.0",
     "vue": "^2.5.16",
-    "vue-observe-visibility": "^0.4.3",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "vue-virtual-scroller": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "ajv": "^6.5.0",

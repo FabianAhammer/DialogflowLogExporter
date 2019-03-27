@@ -16,6 +16,43 @@
 
       <br>
       <br>
+      <DynamicScroller
+        class="scroller"
+        :items="filterConversations(logs.conversations)"
+        :min-item-size="10"
+        key-field="conversationId"
+      >
+        <template v-slot="{item, index, active}">
+          <DynamicScrollerItem
+            :item="item"
+            :active="active"
+            :data-index="index"
+            class="conversation-container"
+          >
+            <div class="conversation">
+              <div
+                class="interaction"
+                v-for="interaction in item.interactions"
+                :key="interaction.id"
+              >
+                <div
+                  class="guest-text"
+                  v-html="highlightText(interaction.conversationResponse.queryText)"
+                ></div>
+                <div class="leonie-text-container">
+                  <div
+                    class="leonie-text-lazy"
+                    v-html="highlightText(interaction.conversationResponse.conversationText)"
+                  ></div>
+                </div>
+                <div class="timestamp">{{ interaction.conversationResponse.timestamp}}</div>
+              </div>
+            </div>
+          </DynamicScrollerItem>
+        </template>
+      </DynamicScroller>
+      <!--
+          
       <transition-group name="conversation-list" tag="div">
         <div
           class="conversation"
@@ -37,11 +74,12 @@
                 v-observe-visibility="(isVisible, entry) => showText(isVisible, entry, interaction.conversationResponse)"
               >loading...{{interaction.conversationResponse.conversationText}}</div>
             </div>
-            <!--{{ interaction.conversationResponse.fulfillmentMessages[0].text.text[0]}}-->
+            
             <div class="timestamp">{{ interaction.conversationResponse.timestamp}}</div>
           </div>
         </div>
       </transition-group>
+      -->
       <div class="bottom-bar">
         <button>Previous</button>
         <input type="text" placeholder="Search" v-model="filterText">
@@ -70,6 +108,7 @@ export default {
                 id: "",
                 conversationResponse: {
                   queryText: "",
+                  conversationText: "",
                   fulfillmentMessages: [
                     {
                       text: {
@@ -135,6 +174,8 @@ export default {
      * @param {String} toHighlight
      */
     highlightText(toHighlight) {
+      if (!toHighlight) return "";
+
       return toHighlight.replace(
         this.filterText,
         `<span class="highlight">${this.filterText}</span>`
@@ -160,6 +201,16 @@ export default {
      * @param {{conversations: {conversationId: number, interactions:{id: string, conversationResponse:{queryText:string, timestamp: string, fulfillmentMessages:{text:{text:string[]}}[]}}[]}[]}} logs
      */
     displayLogs(logs) {
+      // Get the conversationText
+      logs.conversations.forEach(c =>
+        c.interactions.forEach(
+          interaction =>
+            (interaction.conversationResponse.conversationText = this.getText(
+              interaction.conversationResponse
+            ))
+        )
+      );
+
       this.logs = logs;
     },
     filterConversations(conversations) {
@@ -167,17 +218,12 @@ export default {
       return conversations.filter(conversation => {
         return conversation.interactions.some(interaction => {
           let leonieText = interaction.conversationResponse.queryText;
-          let userJsonString =
-            interaction.conversationResponse.fulfillmentMessages;
-          if (userJsonString) {
-            userJsonString = userJsonString[0].text.text[0];
-          }
-          return leonieText.includes(filter) || userJsonString.includes(filter);
+          let userText = interaction.conversationResponse.conversationText;
+          return leonieText.includes(filter) || userText.includes(filter);
         });
       });
     },
-    showText(isVisible, entry, conversationResponse) {
-      if (!isVisible) return;
+    getText(conversationResponse) {
       if (!conversationResponse) return;
 
       let fulfillmentMessages = conversationResponse.fulfillmentMessages;
@@ -198,7 +244,7 @@ export default {
         text = JSON.stringify(jsonResponse);
       }
 
-      this.$set(conversationResponse, "conversationText", text);
+      return text;
     }
   }
 };
@@ -208,6 +254,7 @@ export default {
 
 <style>
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
+@import "~vue-virtual-scroller/dist/vue-virtual-scroller.css";
 
 * {
   box-sizing: border-box;
@@ -255,7 +302,7 @@ button {
   font-size: 0.6em;
   color: grey;
 
-  line-height: 2.5em;
+  line-height: 2em;
 }
 
 .title .small-text {
@@ -265,11 +312,12 @@ button {
   font-size: 1em;
   line-height: initial;
 }
-
+.conversation-container {
+  padding-bottom: 10px;
+}
 .conversation {
   border: 2px solid darkgrey;
   border-radius: 8px;
-  margin-bottom: 10px;
   overflow: hidden;
 }
 
@@ -284,26 +332,14 @@ button {
   font-size: 1.1em;
 }
 .leonie-text-container {
-  height: 3em;
-  overflow-y: auto;
+  /*height: 3em;
+  overflow-y: auto;*/
 }
 .timestamp {
   font-size: 0.8em;
   color: rgb(90, 90, 90);
 }
 
-.conversation-list-enter-active,
-.conversation-list-leave-active {
-  transition: all 0.5s;
-}
-.conversation-list-enter,
-.conversation-list-leave-to {
-  opacity: 0;
-  transform: translateX(50px);
-}
-.conversation-list-move {
-  transition: transform 0.5s;
-}
 .bottom-bar {
   position: fixed;
   bottom: 0px;
@@ -321,5 +357,8 @@ input[type="text"] {
 }
 .highlight {
   background-color: gold;
+}
+.scroller {
+  height: 100%;
 }
 </style>
