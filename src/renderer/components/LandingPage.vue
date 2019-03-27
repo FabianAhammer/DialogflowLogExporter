@@ -27,7 +27,10 @@
             v-for="interaction in conversation.interactions"
             :key="interaction.id"
           >
-            <div class="guest-text">{{ interaction.conversationResponse.queryText}}</div>
+            <div
+              class="guest-text"
+              v-html="highlightText(interaction.conversationResponse.queryText)"
+            ></div>
             <div class="leonie-text-container">
               <div
                 class="leonie-text-lazy"
@@ -57,6 +60,7 @@ export default {
   components: { SystemInformation },
   data() {
     return {
+      filterText: "",
       logs: {
         conversations: [
           {
@@ -122,10 +126,23 @@ export default {
         }
       }, 500);
     },
-
+    exportJson() {
+      writeFile("leonie_logs.json", JSON.stringify(this.logs), "utf8", () => {
+        alert("Exported logs!");
+      });
+    },
+    /**
+     * @param {String} toHighlight
+     */
+    highlightText(toHighlight) {
+      return toHighlight.replace(
+        this.filterText,
+        `<span class="highlight">${this.filterText}</span>`
+      );
+    },
     async requestLogs(cookies) {
       let response = await fetch(
-        "https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=1535839200000&endTimeMillis=1551740399999&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false",
+        `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false`,
         {
           method: "get",
           headers: new Headers({
@@ -298,5 +315,8 @@ button {
 }
 input[type="text"] {
   width: 30em;
+}
+.highlight {
+  background-color: gold;
 }
 </style>
