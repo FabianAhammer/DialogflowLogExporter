@@ -18,15 +18,17 @@
       <br>
       <DynamicScroller
         class="scroller"
-        :items="filterConversations(logs.conversations)"
-        :min-item-size="10"
+        :items="filteredConversations"
+        :min-item-size="50"
         key-field="conversationId"
+        page-mode
       >
         <template v-slot="{item, index, active}">
           <DynamicScrollerItem
             :item="item"
             :active="active"
             :data-index="index"
+            :size-dependencies="[]"
             class="conversation-container"
           >
             <div class="conversation">
@@ -37,15 +39,23 @@
               >
                 <div
                   class="guest-text"
+                  v-if="active"
                   v-html="highlightText(interaction.conversationResponse.queryText)"
                 ></div>
+                <div class="guest-text" v-else>{{interaction.conversationResponse.queryText}}</div>
+
                 <div class="leonie-text-container">
                   <div
                     class="leonie-text-lazy"
+                    v-if="active"
                     v-html="highlightText(interaction.conversationResponse.conversationText)"
                   ></div>
+                  <div
+                    class="leonie-text-lazy"
+                    v-else
+                  >{{interaction.conversationResponse.conversationText}}</div>
                 </div>
-                <div class="timestamp">{{ interaction.conversationResponse.timestamp}}</div>
+                <div class="timestamp">{{interaction.conversationResponse.timestamp}}</div>
               </div>
             </div>
           </DynamicScrollerItem>
@@ -125,6 +135,19 @@ export default {
       }
     };
   },
+  computed: {
+    filteredConversations() {
+      let r = new RegExp(this.filterText, "i");
+      let conversations = this.logs.conversations;
+      return conversations.filter(conversation => {
+        return conversation.interactions.some(interaction => {
+          let leonieText = interaction.conversationResponse.queryText;
+          let userText = interaction.conversationResponse.conversationText;
+          return r.test(leonieText) || r.test(userText);
+        });
+      });
+    }
+  },
   methods: {
     loadFile(e) {
       let files = e.target.files || e.dataTransfer.files;
@@ -174,6 +197,7 @@ export default {
      * @param {String} toHighlight
      */
     highlightText(toHighlight) {
+      if (!this.filterText) return toHighlight;
       if (!toHighlight) return "";
 
       return toHighlight.replace(
@@ -212,16 +236,6 @@ export default {
       );
 
       this.logs = logs;
-    },
-    filterConversations(conversations) {
-      let filter = this.filterText;
-      return conversations.filter(conversation => {
-        return conversation.interactions.some(interaction => {
-          let leonieText = interaction.conversationResponse.queryText;
-          let userText = interaction.conversationResponse.conversationText;
-          return leonieText.includes(filter) || userText.includes(filter);
-        });
-      });
     },
     getText(conversationResponse) {
       if (!conversationResponse) return;
