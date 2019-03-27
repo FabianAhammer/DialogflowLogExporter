@@ -19,7 +19,7 @@
       <transition-group name="conversation-list" tag="div">
         <div
           class="conversation"
-          v-for="conversation in logs.conversations"
+          v-for="conversation in filterConversations(logs.conversations)"
           :key="conversation.conversationId"
         >
           <div
@@ -39,6 +39,11 @@
           </div>
         </div>
       </transition-group>
+      <div class="bottom-bar">
+        <button>Previous</button>
+        <input type="text" placeholder="Search" v-model="filterText">
+        <button>Next</button>
+      </div>
     </main>
   </div>
 </template>
@@ -140,13 +145,23 @@ export default {
     displayLogs(logs) {
       this.logs = logs;
     },
-    exportJson() {
-      writeFile("leonie_logs.json", JSON.stringify(this.logs), "utf8", () => {
-        alert("Exported logs!");
+    filterConversations(conversations) {
+      let filter = this.filterText;
+      return conversations.filter(conversation => {
+        return conversation.interactions.some(interaction => {
+          let leonieText = interaction.conversationResponse.queryText;
+          let userJsonString =
+            interaction.conversationResponse.fulfillmentMessages;
+          if (userJsonString) {
+            userJsonString = userJsonString[0].text.text[0];
+          }
+          return leonieText.includes(filter) || userJsonString.includes(filter);
+        });
       });
     },
     showText(isVisible, entry, conversationResponse) {
       if (!isVisible) return;
+      if (!conversationResponse) return;
 
       let fulfillmentMessages = conversationResponse.fulfillmentMessages;
       if (!fulfillmentMessages || !fulfillmentMessages[0].text.text[0]) return;
@@ -268,5 +283,20 @@ button {
 }
 .conversation-list-move {
   transition: transform 0.5s;
+}
+.bottom-bar {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  height: 3.5em;
+  border-top: 1px solid lightgrey;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5em;
+  background-color: white;
+}
+input[type="text"] {
+  width: 30em;
 }
 </style>
