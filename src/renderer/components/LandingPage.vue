@@ -35,7 +35,7 @@
               <div
                 class="leonie-text-lazy"
                 v-observe-visibility="(isVisible, entry) => showText(isVisible, entry, interaction.conversationResponse)"
-              >loading...</div>
+              >loading...{{interaction.conversationResponse.conversationText}}</div>
             </div>
             <!--{{ interaction.conversationResponse.fulfillmentMessages[0].text.text[0]}}-->
             <div class="timestamp">{{ interaction.conversationResponse.timestamp}}</div>
@@ -184,18 +184,21 @@ export default {
       if (!fulfillmentMessages || !fulfillmentMessages[0].text.text[0]) return;
       let jsonResponse = JSON.parse(fulfillmentMessages[0].text.text[0])[0];
 
+      let text = "";
       if (jsonResponse.speech) {
-        entry.target.innerText = jsonResponse.speech;
+        text = jsonResponse.speech;
       } else if (jsonResponse.payload) {
         let content = jsonResponse.payload.content;
         if (content && content.text) {
-          entry.target.innerText = content.text;
+          text = content.text;
         } else {
-          entry.target.innerText = JSON.stringify(jsonResponse);
+          text = JSON.stringify(jsonResponse);
         }
       } else {
-        entry.target.innerText = JSON.stringify(jsonResponse);
+        text = JSON.stringify(jsonResponse);
       }
+
+      this.$set(conversationResponse, "conversationText", text);
     }
   }
 };
