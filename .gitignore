@@ -61,3 +61,5 @@ typings/
 .next
 
 dist/electron/main\.js
+
+leonie_logs\.json
