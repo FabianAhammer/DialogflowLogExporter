@@ -200,6 +200,8 @@ export default {
       }, 100);
     },
     changePage(nextPage) {
+      if (!this.bearerToken) return;
+
       if (nextPage) {
         this.pageTokens.push(this.logs.nextPageToken);
         this.pageIndex++;
@@ -263,6 +265,10 @@ export default {
         )
       );
 
+      console.log(
+        this.logs.conversations[0].interactions[0].conversationResponse
+      );
+      console.log(logs.conversations[0].interactions[0].conversationResponse);
       this.logs = logs;
     },
     getText(conversationResponse) {
