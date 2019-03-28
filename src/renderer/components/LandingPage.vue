@@ -235,18 +235,19 @@ export default {
     },
     async requestLogs(cookies, bearerToken) {
       let appendix = "";
-      if (this.pageIndex > 0) appendix = `&pageToken=${this.nextPageToken}`;
-      let response = await fetch(
-        `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false${appendix}`,
-        {
-          method: "get",
-          headers: new Headers({
-            Cookie: cookies,
-            Authorization: `Bearer ${bearerToken}`
-          }),
-          credentials: "include"
-        }
-      );
+      if (this.pageIndex > 0)
+        appendix = `&pageToken=${this.logs.nextPageToken}`;
+      let apiURL = `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false${appendix}`;
+      console.log(apiURL);
+
+      let response = await fetch(apiURL, {
+        method: "get",
+        headers: new Headers({
+          Cookie: cookies,
+          Authorization: `Bearer ${bearerToken}`
+        }),
+        credentials: "include"
+      });
 
       this.displayLogs(await response.json());
     },
@@ -264,11 +265,6 @@ export default {
             ))
         )
       );
-
-      console.log(
-        this.logs.conversations[0].interactions[0].conversationResponse
-      );
-      console.log(logs.conversations[0].interactions[0].conversationResponse);
       this.logs = logs;
     },
     getText(conversationResponse) {
