@@ -93,9 +93,9 @@
       </transition-group>
       -->
       <div class="bottom-bar">
-        <button>Previous</button>
+        <button @click="changePage(false)">Previous</button>
         <input type="text" placeholder="Search" v-model="filterText">
-        <button>Next</button>
+        <button @click="changePage(true)">Next</button>
       </div>
     </main>
   </div>
@@ -113,6 +113,9 @@ export default {
     return {
       filterText: "",
       bearerToken: "",
+      pageTokens: [""],
+      pageIndex: 0,
+      dialogflowCookies: "",
       logs: {
         conversations: [
           {
@@ -136,7 +139,8 @@ export default {
             ]
           }
         ]
-      }
+      },
+      nextPageToken: ""
     };
   },
   computed: {
@@ -187,12 +191,22 @@ export default {
 
         if (dialogflowWindow.closed) {
           console.log(dialogflowCookies);
+          this.dialogflowCookies = dialogflowCookies;
           this.bearerToken = this.extractBearerToken(dialogflowCookies);
           this.requestLogs(dialogflowCookies, this.bearerToken);
           window.removeEventListener("message", windowMessageCallback, false);
           clearInterval(closedPoller);
         }
       }, 100);
+    },
+    changePage(nextPage) {
+      if (nextPage) {
+        this.pageTokens.push(this.logs.nextPageToken);
+        this.pageIndex++;
+      } else if (this.pageIndex >= 1) {
+        this.pageIndex--;
+      }
+      this.requestLogs(this.dialogflowCookies, this.bearerToken);
     },
     /**
      * @param {String} cookies
@@ -218,8 +232,10 @@ export default {
       );
     },
     async requestLogs(cookies, bearerToken) {
+      let appendix = "";
+      if (this.pageIndex > 0) appendix = `&pageToken=${this.nextPageToken}`;
       let response = await fetch(
-        `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false`,
+        `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false${appendix}`,
         {
           method: "get",
           headers: new Headers({
@@ -264,28 +280,29 @@ export default {
         if (content && content.text) {
           text = content.text;
         } else {
-          text = `<pre><code> ${JSON.stringify(
-            jsonResponse,
-            null,
-            " "
+          text = `<pre><code> ${this.escapeHtml(
+            JSON.stringify(jsonResponse, null, " ")
           )} <pre><code>`;
-          /*
-          <vue-json-pretty
-          :path="'res'"
-          :data="{ key: 'value' }"
-          @click="handleClick">
-        </vue-json-pretty>
-          */
         }
       } else {
-        text = `<pre><code> ${JSON.stringify(
-          jsonResponse,
-          null,
-          " "
+        text = `<pre><code> ${this.escapeHtml(
+          JSON.stringify(jsonResponse, null, " ")
         )} <pre><code>`;
       }
 
       return text;
+    },
+    /**
+     *
+     * @param {String} unsafe
+     */
+    escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "\\&#039;");
     }
   }
 };
