@@ -104,10 +104,11 @@
 import SystemInformation from "./LandingPage/SystemInformation";
 import { setInterval, clearInterval } from "timers";
 import { readFileSync, writeFile } from "fs";
+import VueJsonPretty from "vue-json-pretty";
 
 export default {
   name: "landing-page",
-  components: { SystemInformation },
+  components: { SystemInformation, VueJsonPretty },
   data() {
     return {
       filterText: "",
@@ -263,10 +264,25 @@ export default {
         if (content && content.text) {
           text = content.text;
         } else {
-          text = fulfillmentMessages[0].text.text[0];
+          text = `<pre><code> ${JSON.stringify(
+            jsonResponse,
+            null,
+            " "
+          )} <pre><code>`;
+          /*
+          <vue-json-pretty
+          :path="'res'"
+          :data="{ key: 'value' }"
+          @click="handleClick">
+        </vue-json-pretty>
+          */
         }
       } else {
-        text = fulfillmentMessages[0].text.text[0];
+        text = `<pre><code> ${JSON.stringify(
+          jsonResponse,
+          null,
+          " "
+        )} <pre><code>`;
       }
 
       return text;
