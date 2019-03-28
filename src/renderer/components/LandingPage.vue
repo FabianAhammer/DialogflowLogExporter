@@ -260,10 +260,10 @@ export default {
         if (content && content.text) {
           text = content.text;
         } else {
-          text = JSON.stringify(jsonResponse);
+          text = fulfillmentMessages[0].text.text[0];
         }
       } else {
-        text = JSON.stringify(jsonResponse);
+        text = fulfillmentMessages[0].text.text[0];
       }
 
       return text;
