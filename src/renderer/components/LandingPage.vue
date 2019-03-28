@@ -42,7 +42,9 @@
                   v-if="active"
                   v-html="highlightText(interaction.conversationResponse.queryText)"
                 ></div>
-                <div class="guest-text" v-else>{{interaction.conversationResponse.queryText}}</div>
+                <div class="guest-text" v-else>
+                  <div>{{interaction.conversationResponse.queryText}}</div>
+                </div>
 
                 <div class="leonie-text-container">
                   <div
@@ -173,6 +175,7 @@ export default {
       let dialogflowCookies = "";
       let windowMessageCallback = m => {
         dialogflowCookies = m.data;
+        console.log(dialogflowCookies + "\n");
       };
       window.addEventListener("message", windowMessageCallback, false);
 
@@ -188,13 +191,13 @@ export default {
           window.removeEventListener("message", windowMessageCallback, false);
           clearInterval(closedPoller);
         }
-      }, 500);
+      }, 100);
     },
     /**
      * @param {String} cookies
      */
     extractBearerToken(cookies) {
-      return document.cookie.match(/currentAgentId[^=;]+=%22([^;]+)%22/)[1];
+      return cookies.match(/currentAgentId[^=;]+=%22([^;]+)%22/)[1];
     },
     exportJson() {
       writeFile("leonie_logs.json", JSON.stringify(this.logs), "utf8", () => {
@@ -323,7 +326,6 @@ button {
 .small-text {
   font-size: 0.6em;
   color: grey;
-
   line-height: 2em;
 }
 
@@ -335,7 +337,7 @@ button {
   line-height: initial;
 }
 .conversation-container {
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 }
 .conversation {
   border: 2px solid darkgrey;
@@ -351,6 +353,9 @@ button {
 }
 .guest-text {
   background-color: rgba(255, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.1em;
 }
 .leonie-text-container {
