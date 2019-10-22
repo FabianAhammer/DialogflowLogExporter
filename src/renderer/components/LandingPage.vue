@@ -289,9 +289,8 @@ export default {
       if (!fulfillmentMessages || !fulfillmentMessages[0].payload) return;
       let jsonResponse = fulfillmentMessages[0].payload;
 
-
       let text = "";
-      if (jsonResponse.content.text) {
+      if (jsonResponse.content && jsonResponse.content.text) {
         text = jsonResponse.content.text;
       } else {
         text = `<pre><code> ${this.escapeHtml(
