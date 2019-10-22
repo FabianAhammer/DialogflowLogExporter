@@ -286,21 +286,13 @@ export default {
       if (!conversationResponse) return;
 
       let fulfillmentMessages = conversationResponse.fulfillmentMessages;
-      if (!fulfillmentMessages || !fulfillmentMessages[0].text.text[0]) return;
-      let jsonResponse = JSON.parse(fulfillmentMessages[0].text.text[0])[0];
+      if (!fulfillmentMessages || !fulfillmentMessages[0].payload) return;
+      let jsonResponse = fulfillmentMessages[0].payload;
+
 
       let text = "";
-      if (jsonResponse.speech) {
-        text = jsonResponse.speech;
-      } else if (jsonResponse.payload) {
-        let content = jsonResponse.payload.content;
-        if (content && content.text) {
-          text = content.text;
-        } else {
-          text = `<pre><code> ${this.escapeHtml(
-            JSON.stringify(jsonResponse, null, " ")
-          )} <pre><code>`;
-        }
+      if (jsonResponse.content.text) {
+        text = jsonResponse.content.text;
       } else {
         text = `<pre><code> ${this.escapeHtml(
           JSON.stringify(jsonResponse, null, " ")
