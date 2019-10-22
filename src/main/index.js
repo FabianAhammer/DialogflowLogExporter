@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, session } from "electron";
 
 /**
  * Set `__static` path to static files in production
@@ -25,10 +25,35 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     height: 563,
     useContentSize: true,
-    width: 1000
+    width: 1000,
+    frame: true,
+    webPreferences: {
+      webSecurity: false,
+      nodeIntegration: true
+    }
   });
 
   mainWindow.loadURL(winURL);
+
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    {
+      urls: ["https://api.dialogflow.com/*"]
+    },
+    (details, callback) => {
+      //details.requestHeaders["User-Agent"] = "MyAgent";
+      if (details.requestHeaders["X-GOOG-ACCESS-TOKEN"]) {
+        mainWindow.webContents.send(
+          "headers",
+          JSON.stringify({
+            "X-GOOG-ACCESS-TOKEN":
+              details.requestHeaders["X-GOOG-ACCESS-TOKEN"],
+            "X-GOOG-ID-TOKEN": details.requestHeaders["X-GOOG-ID-TOKEN"]
+          })
+        );
+      }
+      callback({ requestHeaders: details.requestHeaders });
+    }
+  );
 
   // Open dev tools initially when in development mode
   if (process.env.NODE_ENV === "development") {

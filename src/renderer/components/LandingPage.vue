@@ -8,14 +8,14 @@
         Viewer
       </h1>
       <div></div>
-      <br>
+      <br />
       <button @click="open()">Dialogflow Login</button>
 
-      <input type="file" value="Load Local File" @change="loadFile">
+      <input type="file" value="Load Local File" @change="loadFile" />
       <button @click="exportJson()">Export JSON</button>
 
-      <br>
-      <br>
+      <br />
+      <br />
       <DynamicScroller
         class="scroller"
         :items="filteredConversations"
@@ -94,7 +94,7 @@
       -->
       <div class="bottom-bar">
         <button @click="changePage(false)">Previous</button>
-        <input type="text" placeholder="Search" v-model="filterText">
+        <input type="text" placeholder="Search" v-model="filterText" />
         <button @click="changePage(true)">Next</button>
       </div>
     </main>
@@ -105,6 +105,7 @@ import SystemInformation from "./LandingPage/SystemInformation";
 import { setInterval, clearInterval } from "timers";
 import { readFileSync, writeFile } from "fs";
 import VueJsonPretty from "vue-json-pretty";
+import { ipcRenderer } from "electron";
 
 export default {
   name: "landing-page",
@@ -140,7 +141,8 @@ export default {
           }
         ]
       },
-      nextPageToken: ""
+      nextPageToken: "",
+      googleHeaders: {}
     };
   },
   computed: {
@@ -155,6 +157,11 @@ export default {
         });
       });
     }
+  },
+  mounted() {
+    ipcRenderer.on("headers", (event, message) => {
+      this.googleHeaders = JSON.parse(message);
+    });
   },
   methods: {
     loadFile(e) {
@@ -237,16 +244,24 @@ export default {
       let appendix = "";
       if (this.pageIndex > 0)
         appendix = `&pageToken=${this.logs.nextPageToken}`;
-      let apiURL = `https://console.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false${appendix}`;
+      let apiURL = `https://api.dialogflow.com/api/interactions/conversations2?startTimeMillis=0&endTimeMillis=${Date.now()}&conversationsPerPage=200&interactionsPerConversation=25&matchedToIntent=true&searchBackward=false${appendix}`;
       console.log(apiURL);
+
+      console.log({
+        Cookie: cookies,
+        Authorization: `Bearer ${bearerToken}`,
+        ...this.googleHeaders
+      });
 
       let response = await fetch(apiURL, {
         method: "get",
         headers: new Headers({
           Cookie: cookies,
-          Authorization: `Bearer ${bearerToken}`
+          Authorization: `Bearer ${bearerToken}`,
+          ...this.googleHeaders
         }),
-        credentials: "include"
+        credentials: "include",
+        mode: "cors"
       });
 
       this.displayLogs(await response.json());
