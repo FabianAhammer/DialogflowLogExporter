@@ -286,19 +286,31 @@ export default {
       if (!conversationResponse) return;
 
       let fulfillmentMessages = conversationResponse.fulfillmentMessages;
-      if (!fulfillmentMessages || !fulfillmentMessages[0].payload) return;
-      let jsonResponse = fulfillmentMessages[0].payload;
 
-      let text = "";
-      if (jsonResponse.content && jsonResponse.content.text) {
-        text = jsonResponse.content.text;
+      if (!fulfillmentMessages) return;
+      if (fulfillmentMessages[0].payload) {
+        let jsonResponse = fulfillmentMessages[0].payload;
+
+        let text = "";
+        if (jsonResponse.content && jsonResponse.content.text) {
+          text = jsonResponse.content.text;
+        } else {
+          text = `<pre><code> ${this.escapeHtml(
+            JSON.stringify(jsonResponse, null, " ")
+          )} <pre><code>`;
+        }
+
+        return text;
+      } else if (
+        fulfillmentMessages[0].text &&
+        fulfillmentMessages[0].text.text
+      ) {
+        return fulfillmentMessages[0].text.text[0];
       } else {
-        text = `<pre><code> ${this.escapeHtml(
-          JSON.stringify(jsonResponse, null, " ")
+        return `<pre><code> ${this.escapeHtml(
+          JSON.stringify(fulfillmentMessages[0], null, " ")
         )} <pre><code>`;
       }
-
-      return text;
     },
     /**
      *
