@@ -28,7 +28,7 @@
     "vue-virtual-scroller": "^1.0.0-rc.2"
   },
   "devDependencies": {
-    "ajv": "^6.10.2",
+    "ajv": "^6.12.3",
     "@babel/core": "^7.6.4",
     "babel-loader": "^8.0.6",
     "@babel/plugin-transform-runtime": "^7.6.2",
